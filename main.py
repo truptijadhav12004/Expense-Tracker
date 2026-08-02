@@ -1,69 +1,74 @@
+import streamlit as st
+import pandas as pd
+import os
 
-import csv
+FILE_NAME = "expenses.csv"
 
-def add_expense():
-    date = input("Enter Date (DD-MM-YYYY): ")
-    category = input("Enter Category: ")
-    description = input("Enter Description: ")
-    amount = input("Enter Amount: ")
+# Create CSV file if not exists
+if not os.path.exists(FILE_NAME):
+    df = pd.DataFrame(columns=["Date", "Category", "Description", "Amount"])
+    df.to_csv(FILE_NAME, index=False)
 
-    with open("expenses.csv", "a", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow([date, category, description, amount])
+st.title("💰 Expense Tracker System")
 
-    print("Expense Added Successfully!")
+menu = st.sidebar.selectbox(
+    "Select Option",
+    ["Add Expense", "View Expenses", "Search Expense"]
+)
 
-def view_expenses():
-    with open("expenses.csv", "r") as file:
-        reader = csv.reader(file)
+# Add Expense
+if menu == "Add Expense":
 
-        print("\n------ Expense List ------")
+    st.header("Add New Expense")
 
-        for row in reader:
-            print(f"Date: {row[0]}")
-            print(f"Category: {row[1]}")
-            print(f"Description: {row[2]}")
-            print(f"Amount: ₹{row[3]}")
+    date = st.text_input("Enter Date (DD-MM-YYYY)")
+    category = st.text_input("Enter Category")
+    description = st.text_input("Enter Description")
+    amount = st.number_input("Enter Amount", min_value=0)
 
-def search_expense():
-    category = input("Enter Category to Search: ")
+    if st.button("Add Expense"):
+        df = pd.read_csv(FILE_NAME)
 
-    with open("expenses.csv", "r") as file:
-        reader = csv.reader(file)
+        new_expense = pd.DataFrame({
+            "Date": [date],
+            "Category": [category],
+            "Description": [description],
+            "Amount": [amount]
+        })
 
-        print("\n------ Search Result ------")
+        df = pd.concat([df, new_expense], ignore_index=True)
+        df.to_csv(FILE_NAME, index=False)
 
-        for row in reader:
-            if len(row) > 1 and row[1].lower() == category.lower():
-                print(row)
-print("===================================")
-print("      EXPENSE TRACKER SYSTEM")
-print("===================================")
+        st.success("Expense Added Successfully!")
 
-while True:
-    print("\n1. Add Expense")
-    print("2. View Expenses")
-    print("3. Search Expense")
-    print("4. Delete Expense")
-    print("5. Exit")
 
-    choice = input("\nEnter your choice (1-5): ")
+# View Expense
+elif menu == "View Expenses":
 
-    if choice == "1":
-        add_expense()
+    st.header("Expense List")
 
-    elif choice == "2":
-         view_expenses()
+    df = pd.read_csv(FILE_NAME)
 
-    elif choice == "3":
-        search_expense()
-
-    elif choice == "4":
-        print("Delete Expense Selected")
-
-    elif choice == "5":
-        print("Thank you for using Expense Tracker!")
-        break
-
+    if df.empty:
+        st.info("No expenses found")
     else:
-        print("Invalid Choice! Please try again.")
+        st.dataframe(df)
+
+
+# Search Expense
+elif menu == "Search Expense":
+
+    st.header("Search Expense")
+
+    category = st.text_input("Enter Category")
+
+    if st.button("Search"):
+
+        df = pd.read_csv(FILE_NAME)
+
+        result = df[df["Category"].str.lower() == category.lower()]
+
+        if result.empty:
+            st.warning("No expense found")
+        else:
+            st.dataframe(result)
