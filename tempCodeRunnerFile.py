@@ -1,0 +1,32 @@
+import csv
+print("===================================")
+print("      EXPENSE TRACKER SYSTEM")
+print("===================================")
+
+while True:
+    print("\n1. Add Expense")
+    print("2. View Expenses")
+    print("3. Search Expense")
+    print("4. Delete Expense")
+    print("5. Exit")
+
+    choice = input("\nEnter your choice (1-5): ")
+
+    if choice == "1":
+        print("Add Expense Selected")
+
+    elif choice == "2":
+        print("View Expenses Selected")
+
+    elif choice == "3":
+        print("Search Expense Selected")
+
+    elif choice == "4":
+        print("Delete Expense Selected")
+
+    elif choice == "5":
+        print("Thank you for using Expense Tracker!")
+        break
+
+    else:
+        print("Invalid Choice! Please try again.")
