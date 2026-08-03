@@ -13,7 +13,7 @@ st.title("💰 Expense Tracker System")
 
 menu = st.sidebar.selectbox(
     "Select Option",
-    ["Add Expense", "View Expenses", "Search Expense"]
+    ["Add Expense", "View Expenses", "Search Expense", "Delete Expense", "Update Expense"]
 )
 
 # Add Expense
@@ -49,6 +49,7 @@ elif menu == "View Expenses":
 
     df = pd.read_csv(FILE_NAME)
 
+
     if df.empty:
         st.info("No expenses found")
     else:
@@ -72,3 +73,58 @@ elif menu == "Search Expense":
             st.warning("No expense found")
         else:
             st.dataframe(result)
+# Delete Expense
+elif menu == "Delete Expense":
+
+    st.header("Delete Expense")
+
+    df = pd.read_csv(FILE_NAME)
+
+    if df.empty:
+        st.info("No expenses available")
+    else:
+        st.dataframe(df)
+
+        delete_date = st.text_input("Enter Date to Delete (DD-MM-YYYY)")
+
+        if st.button("Delete Expense"):
+
+            df = df[df["Date"] != delete_date]
+
+            df.to_csv(FILE_NAME, index=False)
+
+            st.success("Expense Deleted Successfully!")
+# Update Expense
+elif menu == "Update Expense":
+
+    st.header("Update Expense")
+
+    df = pd.read_csv(FILE_NAME)
+
+    if df.empty:
+        st.info("No expenses available")
+    else:
+        st.dataframe(df)
+
+        update_date = st.text_input("Enter Date to Update (DD-MM-YYYY)")
+
+        if update_date:
+            result = df[df["Date"] == update_date]
+
+            if not result.empty:
+                category = st.text_input("New Category")
+                description = st.text_input("New Description")
+                amount = st.number_input("New Amount", min_value=0)
+
+                if st.button("Update Expense"):
+
+                    df.loc[df["Date"] == update_date, "Category"] = category
+                    df.loc[df["Date"] == update_date, "Description"] = description
+                    df.loc[df["Date"] == update_date, "Amount"] = amount
+
+                    df.to_csv(FILE_NAME, index=False)
+
+                    st.success("Expense Updated Successfully!")
+
+            else:
+                st.warning("Expense not found!")     
