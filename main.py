@@ -1,6 +1,14 @@
 import streamlit as st
 import pandas as pd
 import os
+from pymongo import MongoClient
+
+MONGO_URI = "mongodb+srv://truptijadhav12004_db_user:trupti12345@cluster0.ur9fmgq.mongodb.net/?appName=Cluster0"
+
+client = MongoClient(MONGO_URI)
+
+db = client["ExpenseTrackerDB"]
+collection = db["expenses"]
 
 FILE_NAME = "expenses.csv"
 
@@ -27,104 +35,86 @@ if menu == "Add Expense":
     amount = st.number_input("Enter Amount", min_value=0)
 
     if st.button("Add Expense"):
-        df = pd.read_csv(FILE_NAME)
 
-        new_expense = pd.DataFrame({
-            "Date": [date],
-            "Category": [category],
-            "Description": [description],
-            "Amount": [amount]
+        collection.insert_one({
+            "Date": date,
+            "Category": category,
+            "Description": description,
+            "Amount": amount
         })
 
-        df = pd.concat([df, new_expense], ignore_index=True)
-        df.to_csv(FILE_NAME, index=False)
-
         st.success("Expense Added Successfully!")
-
-
-# View Expense
+# View Expenses
 elif menu == "View Expenses":
 
     st.header("Expense List")
 
-    df = pd.read_csv(FILE_NAME)
+    data = list(collection.find({}, {"_id": 0}))
 
-
-    if df.empty:
+    if len(data) == 0:
         st.info("No expenses found")
     else:
+        df = pd.DataFrame(data)
         st.dataframe(df)
-
 
 # Search Expense
 elif menu == "Search Expense":
 
     st.header("Search Expense")
 
-    category = st.text_input("Enter Category")
+    search_date = st.text_input("Enter Date to Search")
 
     if st.button("Search"):
 
-        df = pd.read_csv(FILE_NAME)
+        data = list(collection.find({"Date": search_date}, {"_id": 0}))
 
-        result = df[df["Category"].str.lower() == category.lower()]
-
-        if result.empty:
+        if len(data) == 0:
             st.warning("No expense found")
         else:
-            st.dataframe(result)
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+
+
 # Delete Expense
 elif menu == "Delete Expense":
 
     st.header("Delete Expense")
 
-    df = pd.read_csv(FILE_NAME)
+    delete_date = st.text_input("Enter Date to Delete")
 
-    if df.empty:
-        st.info("No expenses available")
-    else:
-        st.dataframe(df)
+    if st.button("Delete"):
 
-        delete_date = st.text_input("Enter Date to Delete (DD-MM-YYYY)")
+        result = collection.delete_one({"Date": delete_date})
 
-        if st.button("Delete Expense"):
-
-            df = df[df["Date"] != delete_date]
-
-            df.to_csv(FILE_NAME, index=False)
-
-            st.success("Expense Deleted Successfully!")
+        if result.deleted_count > 0:
+            st.success("Expense deleted successfully")
+        else:
+            st.warning("Expense not found")
 # Update Expense
 elif menu == "Update Expense":
 
     st.header("Update Expense")
 
-    df = pd.read_csv(FILE_NAME)
+    update_date = st.text_input("Enter Date to Update")
 
-    if df.empty:
-        st.info("No expenses available")
-    else:
-        st.dataframe(df)
+    new_category = st.text_input("New Category")
+    new_description = st.text_input("New Description")
+    new_amount = st.number_input("New Amount", min_value=0)
 
-        update_date = st.text_input("Enter Date to Update (DD-MM-YYYY)")
+    if st.button("Update"):
 
-        if update_date:
-            result = df[df["Date"] == update_date]
+        result = collection.update_one(
+            {"Date": update_date},
+            {
+                "$set": {
+                    "Category": new_category,
+                    "Description": new_description,
+                    "Amount": new_amount
+                }
+            }
+        )
 
-            if not result.empty:
-                category = st.text_input("New Category")
-                description = st.text_input("New Description")
-                amount = st.number_input("New Amount", min_value=0)
-
-                if st.button("Update Expense"):
-
-                    df.loc[df["Date"] == update_date, "Category"] = category
-                    df.loc[df["Date"] == update_date, "Description"] = description
-                    df.loc[df["Date"] == update_date, "Amount"] = amount
-
-                    df.to_csv(FILE_NAME, index=False)
-
-                    st.success("Expense Updated Successfully!")
-
-            else:
-                st.warning("Expense not found!")     
+        if result.modified_count > 0:
+            st.success("Expense updated successfully")
+        else:
+            st.warning("Expense not found")
