@@ -1,21 +1,13 @@
 import streamlit as st
 import pandas as pd
-import os
 from pymongo import MongoClient
 
-MONGO_URI = "mongodb+srv://truptijadhav12004_db_user:trupti12345@cluster0.ur9fmgq.mongodb.net/?appName=Cluster0"
+MONGO_URI = st.secrets["MONGO_URI"]
 
 client = MongoClient(MONGO_URI)
 
 db = client["ExpenseTrackerDB"]
 collection = db["expenses"]
-
-FILE_NAME = "expenses.csv"
-
-# Create CSV file if not exists
-if not os.path.exists(FILE_NAME):
-    df = pd.DataFrame(columns=["Date", "Category", "Description", "Amount"])
-    df.to_csv(FILE_NAME, index=False)
 
 st.title("💰 Expense Tracker System")
 
