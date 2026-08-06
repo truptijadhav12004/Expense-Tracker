@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from pymongo import MongoClient
 from datetime import date
+if "logged_in" not in st.session_state or not st.session_state.logged_in:
+    st.warning("Please Login First")
+    st.switch_page("pages/login.py")
 
 st.set_page_config(
     page_title="Smart Expense Tracker",
